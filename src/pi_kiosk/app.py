@@ -45,8 +45,8 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
 
 def configure_environment() -> None:
     """Set Qt defaults *before* QGuiApplication is created."""
-    # Basic is the lightest Controls style and looks identical on Windows and Pi.
-    os.environ.setdefault("QT_QUICK_CONTROLS_STYLE", "Basic")
+    # Material looks identical on Windows and Pi; theme/accent are set in Main.qml.
+    os.environ.setdefault("QT_QUICK_CONTROLS_STYLE", "Material")
     if is_raspberry_pi():
         os.environ.setdefault("QT_QPA_PLATFORM", "eglfs")
         os.environ.setdefault("QT_QPA_EGLFS_HIDECURSOR", "1")

@@ -67,7 +67,7 @@ Run tests on the device: `cd ~/pi-kiosk && python3 -m pytest`.
 ## Keeping it inside 512 MB
 
 - No desktop: EGLFS renders straight to DRM/KMS (saves ~100 MB vs X/Wayland).
-- `QT_QUICK_CONTROLS_STYLE=Basic` — lightest Controls style, same look on both platforms.
+- `QT_QUICK_CONTROLS_STYLE=Material` — same look on both platforms. `Basic` is lighter if RAM/GPU gets tight.
 - The header shows the process's resident memory, so you can watch it as you build.
 - `MemoryMax=300M` in the service restarts the app rather than letting it starve the OS.
 - Prefer `Loader`/`StackView` to create screens on demand instead of keeping them all alive;

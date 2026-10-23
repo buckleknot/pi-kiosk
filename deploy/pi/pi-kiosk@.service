@@ -12,7 +12,7 @@ Environment=PYTHONUNBUFFERED=1
 Environment=QT_QPA_PLATFORM=eglfs
 Environment=QT_QPA_EGLFS_INTEGRATION=eglfs_kms
 Environment=QT_QPA_EGLFS_HIDECURSOR=1
-Environment=QT_QUICK_CONTROLS_STYLE=Basic
+Environment=QT_QUICK_CONTROLS_STYLE=Material
 # Touch via libinput (default). Uncomment to rotate the official 7" panel 180 deg:
 #Environment=QT_QPA_EGLFS_ROTATION=180
 ExecStart=/usr/bin/python3 -m pi_kiosk --fullscreen

@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Controls.Material
 import QtQuick.Layouts
 import "components"
 
@@ -15,6 +16,12 @@ ApplicationWindow {
     title: "pi-kiosk"
     visibility: kioskFullscreen ? Window.FullScreen : Window.Windowed
     color: Theme.background
+
+    // Material colours inherit down to every control in the window.
+    Material.theme: Material.Dark
+    Material.accent: Theme.accent
+    Material.background: Theme.background
+    Material.foreground: Theme.text
 
     // In windowed (dev) mode lock the size so the layout matches the Pi panel.
     minimumWidth: kioskFullscreen ? 0 : width
