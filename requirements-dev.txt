@@ -1,0 +1,9 @@
+# Keep PySide6 pinned to the version Raspberry Pi OS (Debian 13 "trixie") ships
+# via apt, so what you test on Windows is what runs on the Pi.
+# Check on the Pi with:  apt-cache policy python3-pyside6.qtquick
+PySide6-Essentials==6.8.2.1
+
+pytest>=8
+pytest-qt>=4.4
+psutil>=5.9      # memory readout on Windows (Pi reads /proc directly)
+ruff>=0.6

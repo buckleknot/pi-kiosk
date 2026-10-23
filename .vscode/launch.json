@@ -1,0 +1,22 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "pi-kiosk (800x480, hot reload)",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "pi_kiosk",
+            "args": ["--windowed", "--reload"],
+            "cwd": "${workspaceFolder}",
+            "justMyCode": true
+        },
+        {
+            "name": "pi-kiosk (fullscreen)",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "pi_kiosk",
+            "args": ["--fullscreen"],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}

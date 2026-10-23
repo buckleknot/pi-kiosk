@@ -1,0 +1,26 @@
+[Unit]
+Description=pi-kiosk full-screen Qt app (user %i)
+After=systemd-user-sessions.service
+Wants=systemd-user-sessions.service
+
+[Service]
+User=%i
+WorkingDirectory=__APP_DIR__
+Environment=PYTHONPATH=__APP_DIR__/src
+Environment=PYTHONUNBUFFERED=1
+# Render straight to the display via DRM/KMS: no X11/Wayland, saves ~100MB RAM.
+Environment=QT_QPA_PLATFORM=eglfs
+Environment=QT_QPA_EGLFS_INTEGRATION=eglfs_kms
+Environment=QT_QPA_EGLFS_HIDECURSOR=1
+Environment=QT_QUICK_CONTROLS_STYLE=Basic
+# Touch via libinput (default). Uncomment to rotate the official 7" panel 180 deg:
+#Environment=QT_QPA_EGLFS_ROTATION=180
+ExecStart=/usr/bin/python3 -m pi_kiosk --fullscreen
+Restart=always
+RestartSec=2
+# Guard rail for a 512MB board: the app gets killed and restarted instead of
+# pushing the whole system into swap.
+MemoryMax=300M
+
+[Install]
+WantedBy=multi-user.target

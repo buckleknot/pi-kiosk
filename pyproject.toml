@@ -1,0 +1,33 @@
+[project]
+name = "pi-kiosk"
+version = "0.1.0"
+description = "Full-screen PySide6/QML app for Raspberry Pi Zero 2 W"
+requires-python = ">=3.11"
+# PySide6 is deliberately NOT a runtime dependency: on the Pi it comes from apt
+# (Debian's python3-pyside6.* packages, linked against the system Qt with EGLFS).
+# On Windows it is installed from requirements-dev.txt, pinned to the same version.
+dependencies = []
+
+[project.scripts]
+pi-kiosk = "pi_kiosk.app:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+pi_kiosk = ["qml/**/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+qt_api = "pyside6"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
