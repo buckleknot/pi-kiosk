@@ -75,6 +75,22 @@ def test_night_mode_follows_clock_and_settings(make, qtbot):
     assert not b.nightMode
 
 
+def test_night_toggle_overrides_until_the_next_scheduled_switch(make):
+    b, clock, _ = make("20:00")  # day; night starts 21:00
+    b.toggleNight()
+    assert b.nightMode and b.nightOverridden
+    clock.advance(minutes=30)
+    b._tick()
+    assert b.nightMode and b.nightOverridden  # override holds
+    clock.advance(minutes=30)
+    b._tick()
+    assert b.nightMode and not b.nightOverridden  # 21:00: schedule agrees, back to auto
+    b.toggleNight()
+    assert not b.nightMode and b.nightOverridden
+    b.toggleNight()
+    assert b.nightMode and not b.nightOverridden  # toggling back = auto again
+
+
 def test_settings_persist_and_bad_times_are_ignored(make, tmp_path):
     b, _, _ = make()
     b.alarmTime = "06:30"

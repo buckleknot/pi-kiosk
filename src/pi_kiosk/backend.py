@@ -86,6 +86,8 @@ class Backend(QObject):
         self._date = ""
         self._memory = 0.0
         self._night = False
+        self._auto_night: bool | None = None  # what the schedule says
+        self._night_override: bool | None = None  # set by toggleNight() until the next switch
         self._ringing = False
         self._playing = ""            # "", "relax", "alarm" or "preview"
         self._preview = ""            # "<kind>/<id>" while previewing
@@ -132,12 +134,28 @@ class Backend(QObject):
         self._update_night(now)
         self._check_alarm(now)
 
+    def _get_night_overridden(self) -> bool:
+        return self._night_override is not None
+
+    nightOverridden = Property(bool, _get_night_overridden, notify=nightModeChanged)
+
     def _update_night(self, now: datetime) -> None:
         s = self._settings
-        night = is_night(now.time(), parse_hhmm(s.night_start), parse_hhmm(s.night_end))
-        if night != self._night:
-            self._night = night
+        auto = is_night(now.time(), parse_hhmm(s.night_start), parse_hhmm(s.night_end))
+        if auto != self._auto_night:  # the schedule switched: any override has had its turn
+            self._auto_night = auto
+            self._set_night(auto, None)
+
+    def _set_night(self, night: bool, override: bool | None) -> None:
+        if (night, override) != (self._night, self._night_override):
+            self._night, self._night_override = night, override
             self.nightModeChanged.emit()
+
+    @Slot()
+    def toggleNight(self) -> None:
+        """Flip day/night now; the schedule takes over again at its next switch."""
+        night = not self._night
+        self._set_night(night, None if night == self._auto_night else night)
 
     # --- settings (each change is saved straight away) --------------------
     def _set(self, key: str, value) -> None:

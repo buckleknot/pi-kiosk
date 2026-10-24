@@ -84,6 +84,8 @@ Run tests on the device: `cd ~/pi-kiosk && python3 -m pytest`.
 - Night mode (dim red on black) runs between the times set in Settings; otherwise stock
   Material colours. Alarm and night times, and the chosen sounds, are saved to
   `%APPDATA%\pi-kiosk\settings.json` on Windows and `~/.config/pi-kiosk/settings.json` on the Pi.
+- The moon/sun button on the right flips day/night now; the schedule takes over again at
+  its next switch.
 - Sounds are plain WAV files in `src/pi_kiosk/sounds/ambient` (Relax) and `.../alarm`.
   Drop more in and they appear in Settings (`ocean-waves.wav` shows as "Ocean waves").
   The bundled ones are generated placeholders: `python scripts/make_sounds.py`.

@@ -1,9 +1,11 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Controls.Material
 import QtQuick.Layouts
 import "../components"
 
-// Home screen: big clock, with Alarm / Relax / Settings along the bottom.
+// Home screen: big clock, with Alarm / Relax / Settings along the bottom and
+// a day/night override on the right-hand side.
 Page {
     id: page
     required property var backend
@@ -11,10 +13,45 @@ Page {
 
     // Dev aid: resident memory (see README, "Keeping it inside 512 MB").
     Label {
-        anchors { top: parent.top; right: parent.right; margins: 12 }
+        anchors { top: parent.top; left: parent.left; margins: 12 }
         text: page.backend.memoryMb.toFixed(0) + " MB"
         font.pixelSize: 14
         opacity: 0.4
+    }
+
+    ColumnLayout {
+        anchors {
+            right: parent.right; top: parent.top; bottom: buttons.top
+            rightMargin: 16; topMargin: 16; bottomMargin: 12
+        }
+        spacing: 2
+
+        RoundButton {
+            id: dayNight
+            Layout.alignment: Qt.AlignHCenter
+            implicitWidth: 72
+            implicitHeight: 72
+            Material.background: Theme.night ? Theme.nightSurface : undefined
+            onClicked: page.backend.toggleNight()
+            contentItem: Item {
+                DayNightIcon {
+                    anchors.centerIn: parent
+                    width: 30
+                    height: 30
+                    night: Theme.night
+                    color: dayNight.Material.foreground
+                }
+            }
+        }
+        Label {
+            Layout.alignment: Qt.AlignHCenter
+            text: page.backend.nightOverridden
+                  ? "until " + (Theme.night ? page.backend.nightEnd : page.backend.nightStart)
+                  : "auto"
+            font.pixelSize: 13
+            opacity: 0.6
+        }
+        Item { Layout.fillHeight: true }
     }
 
     ColumnLayout {
