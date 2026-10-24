@@ -5,6 +5,7 @@ from pi_kiosk.display import (
     BACKGROUNDS_DIR,
     BackgroundProvider,
     Backlight,
+    button_tint,
     night_tint,
     pick_background,
 )
@@ -70,3 +71,10 @@ def test_backlight_writes_scaled_value(tmp_path):
 def test_missing_backlight_means_software_dimming(tmp_path):
     assert not Backlight(tmp_path / "none").available
 
+
+def test_button_tint_is_a_light_version_of_the_picture(tmp_path):
+    tint = QColor(button_tint(make_image(tmp_path / "blue.png", colour="#2050c0")))
+    assert tint.blue() > tint.green() > tint.red()  # still blue
+    assert min(tint.red(), tint.green(), tint.blue()) > 140  # but light, for dark text
+    assert 180 < tint.alpha() < 255  # and a little see-through
+    assert button_tint(tmp_path / "missing.png") == "#e0e0e0"

@@ -12,7 +12,7 @@ from pathlib import Path
 
 from PySide6.QtCore import Property, QObject, QTimer, Signal, Slot
 
-from .display import BACKGROUNDS_DIR, Backlight, pick_background
+from .display import BACKGROUNDS_DIR, PLAIN_BUTTON, Backlight, button_tint, pick_background
 from .settings import Settings, default_settings_path
 from .sound import SoundPlayer, create_player
 
@@ -94,6 +94,7 @@ class Backend(QObject):
         self._backlight = backlight or Backlight()
         self._background = ""  # image path under backgrounds/
         self._background_key = ""  # the sound id (or IDLE_BACKGROUND) it was picked for
+        self._button_tint = PLAIN_BUTTON  # button colour matched to the picture
 
         self._time = ""
         self._date = ""
@@ -332,6 +333,7 @@ class Backend(QObject):
                or pick_background(IDLE_BACKGROUND, self._backgrounds_dir))
         if rel != self._background:
             self._background = rel
+            self._button_tint = button_tint(self._backgrounds_dir / rel) if rel else PLAIN_BUTTON
             self.backgroundChanged.emit()
 
     def _get_background_source(self) -> str:
@@ -340,6 +342,11 @@ class Backend(QObject):
         return f"image://backgrounds/{'night' if self._night else 'day'}/{self._background}"
 
     backgroundSource = Property(str, _get_background_source, notify=backgroundChanged)
+
+    def _get_button_tint(self) -> str:
+        return self._button_tint
+
+    buttonTint = Property(str, _get_button_tint, notify=backgroundChanged)  # "#AARRGGBB"
 
     def _get_relaxing(self) -> bool:
         return self._playing == "relax"

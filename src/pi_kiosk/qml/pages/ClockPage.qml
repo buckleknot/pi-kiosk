@@ -34,7 +34,7 @@ Page {
             Layout.alignment: Qt.AlignHCenter
             implicitWidth: 72
             implicitHeight: 72
-            Material.background: Theme.night ? Theme.nightSurface : undefined
+            Material.background: Theme.night ? Theme.nightSurface : Theme.buttonTint
             onClicked: page.backend.toggleNight()
             contentItem: Item {
                 DayNightIcon {

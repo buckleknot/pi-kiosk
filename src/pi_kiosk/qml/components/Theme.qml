@@ -6,6 +6,8 @@ import QtQuick
 // on black, which is easy on dark-adapted eyes. Main.qml keeps `night` in sync.
 QtObject {
     property bool night: false
+    // By day, plain buttons take a pastel of the background picture (Main.qml animates it).
+    property color buttonTint: "#e0e0e0"
 
     readonly property color nightBackground: "#000000"
     readonly property color nightText: "#a31515"

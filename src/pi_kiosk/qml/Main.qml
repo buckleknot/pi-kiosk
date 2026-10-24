@@ -24,6 +24,9 @@ ApplicationWindow {
 
     // Day: stock Material. Night: dim red on black. Inherited by every control.
     Binding { target: Theme; property: "night"; value: root.backend.nightMode }
+    Binding { target: Theme; property: "buttonTint"; value: root.buttonTint }
+    property color buttonTint: root.backend.buttonTint
+    Behavior on buttonTint { ColorAnimation { duration: 1200 } }  // in step with the crossfade
     Material.theme: Theme.night ? Material.Dark : Material.Light
     Material.accent: Theme.night ? Theme.nightText : Material.Blue
     Material.background: Theme.night ? Theme.nightBackground : undefined

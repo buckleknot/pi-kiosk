@@ -6,10 +6,11 @@ import random
 from pathlib import Path
 
 from PySide6.QtCore import QSize, Qt
-from PySide6.QtGui import QImage, QImageReader, qRgb
+from PySide6.QtGui import QColor, QImage, QImageReader, qRgb
 from PySide6.QtQuick import QQuickImageProvider
 
 BACKGROUNDS_DIR = Path(__file__).resolve().parent / "backgrounds"
+PLAIN_BUTTON = "#e0e0e0"  # Material's light-theme button grey, when there's no picture
 IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png"}
 
 
@@ -63,6 +64,23 @@ def night_tint(image: QImage) -> QImage:
         table.append(qRgb(r, r // 12, r // 12))
     tinted.setColorTable(table)
     return tinted.convertToFormat(QImage.Format.Format_RGB32)  # also copies out of `data`
+
+
+def button_tint(path: Path) -> str:
+    """A soft, slightly see-through pastel of the picture's average colour, for the plain
+    (non-accent) buttons by day, so they sit in the scene instead of standing out grey."""
+    reader = QImageReader(str(path))
+    reader.setScaledSize(QSize(16, 16))  # JPEGs decode straight to this: cheap
+    image = reader.read()
+    if image.isNull():
+        return PLAIN_BUTTON
+    tiny = image.scaled(1, 1, Qt.AspectRatioMode.IgnoreAspectRatio,
+                        Qt.TransformationMode.SmoothTransformation)
+    c = QColor(tiny.pixel(0, 0))
+    def mix(v: int) -> int:  # 45% picture, 55% white: light enough for dark text
+        return round(v * 0.45 + 255 * 0.55)
+    return QColor.fromRgb(mix(c.red()), mix(c.green()), mix(c.blue()), 215).name(
+        QColor.NameFormat.HexArgb)
 
 
 class BackgroundProvider(QQuickImageProvider):
