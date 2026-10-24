@@ -13,7 +13,8 @@ sudo apt-get install -y --no-install-recommends \
     python3-pyside6.qtqml python3-pyside6.qtquick python3-pyside6.qtquickcontrols2 \
     qml6-module-qtquick qml6-module-qtquick-controls qml6-module-qtquick-layouts \
     qml6-module-qtquick-templates qml6-module-qtquick-window qml6-module-qtqml-workerscript \
-    qt6-qpa-plugins libgles2 fonts-dejavu-core
+    qt6-qpa-plugins libgles2 fonts-dejavu-core \
+    alsa-utils  # aplay: plays the WAV sounds without a media framework
 
 # Optional: tests on the Pi (uses apt so nothing is pip-installed system-wide)
 sudo apt-get install -y --no-install-recommends python3-pytest python3-pytestqt || true

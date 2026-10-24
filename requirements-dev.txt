@@ -6,4 +6,5 @@ PySide6-Essentials==6.8.2.1
 pytest>=8
 pytest-qt>=4.4
 psutil>=5.9      # memory readout on Windows (Pi reads /proc directly)
+sounddevice>=0.5; sys_platform == "win32"   # audio on Windows (the Pi pipes into aplay)
 ruff>=0.6
