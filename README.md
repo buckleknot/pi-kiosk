@@ -44,11 +44,15 @@ Esc quits the app.
 src/pi_kiosk/
   app.py          entry point, CLI flags, platform defaults
   backend.py      Python objects exposed to QML (put logic here — it's unit-testable)
+  settings.py     user settings, saved as JSON
+  sound.py        WAV streaming with fade in/out (sounddevice on Windows, aplay on the Pi)
   hotreload.py    dev-only QML reload
-  qml/Main.qml    root window
-  qml/components/ reusable QML (BigButton, Theme singleton)
+  qml/Main.qml    root window: day/night colours, page stack, alarm overlay
+  qml/pages/      ClockPage (home), ConfigPage (settings)
+  qml/components/ reusable QML (BigButton, TimePicker, SoundPicker, AlarmPopup, Theme)
+  sounds/         ambient/ and alarm/ WAVs, listed automatically in Settings
 tests/            pytest + pytest-qt (offscreen)
-scripts/          setup-dev.ps1, deploy.ps1
+scripts/          setup-dev.ps1, deploy.ps1, make_sounds.py
 deploy/pi/        install.sh + systemd unit for the Pi
 ```
 
@@ -74,6 +78,19 @@ Run tests on the device: `cd ~/pi-kiosk && python3 -m pytest`.
   keep images at screen resolution (800×480), not camera-size.
 - Free more RAM on the Pi: `sudo systemctl disable --now getty@tty1 bluetooth ModemManager`
   (only those you don't need).
+
+## Clock, alarm and sounds
+
+- Night mode (dim red on black) runs between the times set in Settings; otherwise stock
+  Material colours. Alarm and night times, and the chosen sounds, are saved to
+  `%APPDATA%\pi-kiosk\settings.json` on Windows and `~/.config/pi-kiosk/settings.json` on the Pi.
+- Sounds are plain WAV files in `src/pi_kiosk/sounds/ambient` (Relax) and `.../alarm`.
+  Drop more in and they appear in Settings (`ocean-waves.wav` shows as "Ocean waves").
+  The bundled ones are generated placeholders: `python scripts/make_sounds.py`.
+  16 kHz mono keeps them small; ambient files should loop cleanly end-to-start.
+  They must be 16-bit PCM. Sounds fade in over 2 s and out over 2 s (`FADE_SECONDS`).
+- The Pi Zero 2 W has no headphone jack: audio needs a USB sound card or an I2S
+  amp/DAC board (or HDMI). Check with `aplay -l` and `aplay some.wav` on the Pi.
 
 ## Notes
 

@@ -1,2 +1,5 @@
 singleton Theme 1.0 Theme.qml
 BigButton 1.0 BigButton.qml
+TimePicker 1.0 TimePicker.qml
+SoundPicker 1.0 SoundPicker.qml
+AlarmPopup 1.0 AlarmPopup.qml

@@ -1,8 +1,8 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Controls.Material
-import QtQuick.Layouts
 import "components"
+import "pages"
 
 // Root window. Properties marked `required` are injected from Python via
 // QQmlApplicationEngine.setInitialProperties() in app.py.
@@ -15,13 +15,6 @@ ApplicationWindow {
     visible: true
     title: "pi-kiosk"
     visibility: kioskFullscreen ? Window.FullScreen : Window.Windowed
-    color: Theme.background
-
-    // Material colours inherit down to every control in the window.
-    Material.theme: Material.Dark
-    Material.accent: Theme.accent
-    Material.background: Theme.background
-    Material.foreground: Theme.text
 
     // In windowed (dev) mode lock the size so the layout matches the Pi panel.
     minimumWidth: kioskFullscreen ? 0 : width
@@ -29,59 +22,31 @@ ApplicationWindow {
     minimumHeight: kioskFullscreen ? 0 : height
     maximumHeight: kioskFullscreen ? 100000 : height
 
-    header: ToolBar {
-        height: 56
-        background: Rectangle { color: Theme.surface }
-        RowLayout {
-            anchors.fill: parent
-            anchors.leftMargin: 16
-            anchors.rightMargin: 16
-            Label {
-                text: "pi-kiosk"
-                font.pixelSize: 24
-                font.bold: true
-                color: Theme.text
-            }
-            Item { Layout.fillWidth: true }
-            Label {
-                text: root.backend.memoryMb.toFixed(0) + " MB"
-                font.pixelSize: 16
-                color: Theme.muted
-            }
-            Label {
-                text: root.backend.time
-                font.pixelSize: 24
-                color: Theme.text
-                Layout.leftMargin: 16
-            }
+    // Day: stock Material. Night: dim red on black. Inherited by every control.
+    Binding { target: Theme; property: "night"; value: root.backend.nightMode }
+    Material.theme: Theme.night ? Material.Dark : Material.Light
+    Material.accent: Theme.night ? Theme.nightText : Material.Blue
+    Material.background: Theme.night ? Theme.nightBackground : undefined
+    Material.foreground: Theme.night ? Theme.nightText : undefined
+
+    StackView {
+        id: stack
+        anchors.fill: parent
+        initialItem: ClockPage {
+            backend: root.backend
+            onSettingsRequested: stack.push(configPage)
         }
     }
 
-    ColumnLayout {
-        anchors.centerIn: parent
-        spacing: 24
-
-        Label {
-            Layout.alignment: Qt.AlignHCenter
-            text: root.backend.counter
-            font.pixelSize: 96
-            color: Theme.text
-        }
-
-        RowLayout {
-            spacing: 24
-            Layout.alignment: Qt.AlignHCenter
-            BigButton {
-                text: "Tap me"
-                onClicked: root.backend.increment()
-            }
-            BigButton {
-                text: "Reset"
-                accent: false
-                onClicked: root.backend.reset()
-            }
+    Component {
+        id: configPage
+        ConfigPage {
+            backend: root.backend
+            onBackRequested: stack.pop()
         }
     }
+
+    AlarmPopup { backend: root.backend }
 
     // Escape quits in dev; on the Pi there is no keyboard so this is harmless.
     Shortcut {

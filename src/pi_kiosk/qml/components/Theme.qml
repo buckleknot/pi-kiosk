@@ -1,11 +1,14 @@
 pragma Singleton
 import QtQuick
 
-// Central colours/sizes. Use as `Theme.accent` anywhere that imports "components".
+// Central colours. Use as `Theme.nightText` anywhere that imports "components".
+// By day the app uses stock Material colours; these are the night palette: dim red
+// on black, which is easy on dark-adapted eyes. Main.qml keeps `night` in sync.
 QtObject {
-    readonly property color background: "#1e1f24"
-    readonly property color surface: "#2c2e35"
-    readonly property color accent: "#2f7de1"
-    readonly property color text: "#f2f2f2"
-    readonly property color muted: "#9a9ca3"
+    property bool night: false
+
+    readonly property color nightBackground: "#000000"
+    readonly property color nightText: "#a31515"
+    readonly property color nightSurface: "#1c0404"
+    readonly property color nightAccent: "#420808"
 }
