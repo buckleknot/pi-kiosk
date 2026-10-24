@@ -61,6 +61,7 @@ def main(argv: list[str] | None = None) -> int:
     from PySide6.QtQml import QQmlApplicationEngine
 
     from .backend import Backend
+    from .display import BackgroundProvider
     from .hotreload import QmlReloader
 
     app = QGuiApplication(sys.argv)
@@ -69,6 +70,7 @@ def main(argv: list[str] | None = None) -> int:
     backend = Backend()
     engine = QQmlApplicationEngine()
     engine.addImportPath(str(QML_DIR))
+    engine.addImageProvider("backgrounds", BackgroundProvider())
     props = {
         "backend": backend,
         "kioskFullscreen": args.fullscreen,

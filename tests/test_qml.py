@@ -7,6 +7,7 @@ from PySide6.QtQml import QQmlApplicationEngine, QQmlComponent
 
 from pi_kiosk.app import MAIN_QML, QML_DIR
 from pi_kiosk.backend import Backend
+from pi_kiosk.display import BackgroundProvider
 from pi_kiosk.settings import Settings
 from pi_kiosk.sound import SoundPlayer
 
@@ -24,6 +25,7 @@ def load_main(backend, fullscreen=False):
     warnings = []
     engine.warnings.connect(lambda ws: warnings.extend(w.toString() for w in ws))
     engine.addImportPath(str(QML_DIR))
+    engine.addImageProvider("backgrounds", BackgroundProvider())
     engine.setInitialProperties({
         "backend": backend, "kioskFullscreen": fullscreen, "width": 800, "height": 480,
     })
@@ -58,6 +60,16 @@ def test_relax_button_binding_updates(qtbot, tmp_path):
     engine, _ = load_main(backend)
     backend.toggleRelax()
     assert "Stop" in texts(engine.rootObjects()[0])
+
+
+def test_backgrounds_load_without_warnings_day_and_night(qtbot, tmp_path):
+    backend = make_backend(tmp_path)
+    engine, warnings = load_main(backend)
+    backend.toggleRelax()
+    qtbot.wait(100)
+    backend.toggleNight()
+    qtbot.wait(100)
+    assert warnings == []
 
 
 def test_config_page_loads_without_warnings(qtbot, tmp_path):

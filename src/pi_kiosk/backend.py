@@ -12,7 +12,7 @@ from pathlib import Path
 
 from PySide6.QtCore import Property, QObject, QTimer, Signal, Slot
 
-from .display import Backlight
+from .display import BACKGROUNDS_DIR, Backlight, pick_background
 from .settings import Settings, default_settings_path
 from .sound import SoundPlayer, create_player
 
@@ -20,6 +20,7 @@ SOUNDS_DIR = Path(__file__).resolve().parent / "sounds"
 SNOOZE = timedelta(minutes=9)
 ALARM_MIN_VOLUME = 50  # percent: a turned-down slider mustn't make you oversleep
 MIN_BRIGHTNESS = 5  # percent: never so dark you can't find the slider again
+IDLE_BACKGROUND = "default"  # backgrounds/default/: the scene when nothing is playing
 KINDS = ("ambient", "alarm")  # sub-folders of sounds/, also the `kind` QML passes in
 
 
@@ -70,6 +71,7 @@ class Backend(QObject):
     playingChanged = Signal()
     volumeChanged = Signal()
     brightnessChanged = Signal()
+    backgroundChanged = Signal()
 
     def __init__(
         self,
@@ -79,6 +81,7 @@ class Backend(QObject):
         sounds_dir: Path = SOUNDS_DIR,
         player: SoundPlayer | None = None,
         clock: Callable[[], datetime] = datetime.now,
+        backgrounds_dir: Path = BACKGROUNDS_DIR,
         backlight: Backlight | None = None,
     ) -> None:
         super().__init__(parent)
@@ -87,7 +90,10 @@ class Backend(QObject):
         self._sounds_dir = sounds_dir
         self._player = player or create_player(self)
         self._clock = clock
+        self._backgrounds_dir = backgrounds_dir
         self._backlight = backlight or Backlight()
+        self._background = ""  # image path under backgrounds/
+        self._background_key = ""  # the sound id (or IDLE_BACKGROUND) it was picked for
 
         self._time = ""
         self._date = ""
@@ -106,6 +112,7 @@ class Backend(QObject):
         self._save_timer.timeout.connect(self._save)
         self._apply_volume()
         self._apply_brightness()
+        self._show_background(IDLE_BACKGROUND)
 
         self._timer = QTimer(self)
         self._timer.setInterval(1000)
@@ -167,6 +174,7 @@ class Backend(QObject):
             if changed:
                 self._apply_brightness()
                 self.brightnessChanged.emit()
+                self.backgroundChanged.emit()
 
     @Slot()
     def toggleNight(self) -> None:
@@ -298,6 +306,8 @@ class Backend(QObject):
         if path:
             self._player.play(path, loop)
         self._set_playing(what if path else "")
+        if path and what in ("relax", "alarm"):
+            self._show_background(path.stem)
 
     def _stop(self) -> None:
         self._player.stop()
@@ -306,10 +316,30 @@ class Backend(QObject):
     def _set_playing(self, what: str) -> None:
         if what != "preview":
             self._preview = ""
+        if what not in ("relax", "alarm"):
+            self._show_background(IDLE_BACKGROUND)
         if what != self._playing or what == "preview":
             self._playing = what
             self._apply_volume()
             self.playingChanged.emit()
+
+    def _show_background(self, key: str) -> None:
+        """A random picture for `key`'s folder, falling back to the idle scene."""
+        if key == self._background_key == IDLE_BACKGROUND:
+            return  # already idle: don't reshuffle on every stop/preview
+        self._background_key = key
+        rel = (pick_background(key, self._backgrounds_dir)
+               or pick_background(IDLE_BACKGROUND, self._backgrounds_dir))
+        if rel != self._background:
+            self._background = rel
+            self.backgroundChanged.emit()
+
+    def _get_background_source(self) -> str:
+        if not self._background:
+            return ""
+        return f"image://backgrounds/{'night' if self._night else 'day'}/{self._background}"
+
+    backgroundSource = Property(str, _get_background_source, notify=backgroundChanged)
 
     def _get_relaxing(self) -> bool:
         return self._playing == "relax"

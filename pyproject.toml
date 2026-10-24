@@ -19,7 +19,7 @@ build-backend = "setuptools.build_meta"
 where = ["src"]
 
 [tool.setuptools.package-data]
-pi_kiosk = ["qml/**/*", "sounds/**/*.wav"]
+pi_kiosk = ["qml/**/*", "sounds/**/*.wav", "backgrounds/**/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -11,6 +11,8 @@ Page {
     required property var backend
     signal settingsRequested()
 
+    background: Item {}  // transparent, so the window's Backdrop photo shows through
+
     // Dev aid: resident memory (see README, "Keeping it inside 512 MB").
     Label {
         anchors { top: parent.top; horizontalCenter: parent.horizontalCenter; topMargin: 8 }

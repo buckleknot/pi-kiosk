@@ -29,6 +29,12 @@ ApplicationWindow {
     Material.background: Theme.night ? Theme.nightBackground : undefined
     Material.foreground: Theme.night ? Theme.nightText : undefined
 
+    // Photo for the sound that's playing, behind the (transparent) clock page.
+    Backdrop {
+        anchors.fill: parent
+        source: root.backend.backgroundSource
+    }
+
     StackView {
         id: stack
         anchors.fill: parent

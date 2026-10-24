@@ -142,6 +142,35 @@ def test_brightness_is_remembered_separately_for_day_and_night(tmp_path, qtbot):
     qtbot.waitUntil(lambda: Settings.load(tmp_path / "s.json").night_brightness == 5, timeout=2000)
 
 
+def test_background_follows_what_is_playing_and_night_mode(make):
+    b, clock, _ = make("06:59", alarm_enabled=True, alarm_time="07:00")
+    idle = b.backgroundSource
+    assert idle.startswith("image://backgrounds/night/default/")  # idle scene, 06:59 = night
+    b.toggleRelax()
+    assert b.backgroundSource == "image://backgrounds/night/rain/rain.jpg"
+    b.toggleNight()
+    assert b.backgroundSource == "image://backgrounds/day/rain/rain.jpg"
+    clock.advance(minutes=1)
+    b._tick()  # alarm takes over, with its own picture
+    assert b.backgroundSource.endswith("/chime/chime.jpg")
+    b.stopAlarm()
+    assert "/default/" in b.backgroundSource
+    idle = b.backgroundSource
+    b.previewSound("ambient", "rain")
+    b.stopPreview()
+    assert b.backgroundSource == idle  # stays put while idle: no reshuffling
+
+
+def test_sound_without_pictures_falls_back_to_the_idle_scene(make, tmp_path):
+    (tmp_path / "bg" / "default").mkdir(parents=True)
+    (tmp_path / "bg" / "default" / "calm.png").write_bytes(b"")  # name is all that's checked
+    clock = Clock("12:00")
+    b = Backend(settings_path=tmp_path / "s.json", player=FakePlayer(), clock=clock,
+                backgrounds_dir=tmp_path / "bg")
+    b.toggleRelax()
+    assert b.backgroundSource == "image://backgrounds/day/default/calm.png"
+
+
 def test_settings_persist_and_bad_times_are_ignored(make, tmp_path):
     b, _, _ = make()
     b.alarmTime = "06:30"

@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Controls.Material
 import QtQuick.Layouts
 import "../components"
 
@@ -8,6 +9,13 @@ Page {
     id: page
     required property var backend
     signal backRequested()
+
+    // The window's backdrop shows through, behind a stronger wash than the clock page
+    // gets, so the form controls stay easy to read.
+    background: Rectangle {
+        color: page.Material.backgroundColor
+        opacity: Theme.night ? 0.4 : 0.6
+    }
 
     // A preview shouldn't keep playing once you leave the page.
     Component.onDestruction: page.backend.stopPreview()

@@ -14,6 +14,8 @@ Popup {
     modal: true
     closePolicy: Popup.NoAutoClose
     visible: popup.backend.alarmRinging
+    background: Backdrop { source: popup.backend.backgroundSource }
+    Overlay.modal: Item {}  // full screen already; no dimming layer needed
 
     ColumnLayout {
         anchors.centerIn: parent
