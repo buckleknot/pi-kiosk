@@ -12,12 +12,14 @@ from pathlib import Path
 
 from PySide6.QtCore import Property, QObject, QTimer, Signal, Slot
 
+from .display import Backlight
 from .settings import Settings, default_settings_path
 from .sound import SoundPlayer, create_player
 
 SOUNDS_DIR = Path(__file__).resolve().parent / "sounds"
 SNOOZE = timedelta(minutes=9)
 ALARM_MIN_VOLUME = 50  # percent: a turned-down slider mustn't make you oversleep
+MIN_BRIGHTNESS = 5  # percent: never so dark you can't find the slider again
 KINDS = ("ambient", "alarm")  # sub-folders of sounds/, also the `kind` QML passes in
 
 
@@ -67,6 +69,7 @@ class Backend(QObject):
     alarmRingingChanged = Signal()
     playingChanged = Signal()
     volumeChanged = Signal()
+    brightnessChanged = Signal()
 
     def __init__(
         self,
@@ -76,6 +79,7 @@ class Backend(QObject):
         sounds_dir: Path = SOUNDS_DIR,
         player: SoundPlayer | None = None,
         clock: Callable[[], datetime] = datetime.now,
+        backlight: Backlight | None = None,
     ) -> None:
         super().__init__(parent)
         self._settings_path = settings_path or default_settings_path()
@@ -83,6 +87,7 @@ class Backend(QObject):
         self._sounds_dir = sounds_dir
         self._player = player or create_player(self)
         self._clock = clock
+        self._backlight = backlight or Backlight()
 
         self._time = ""
         self._date = ""
@@ -100,6 +105,7 @@ class Backend(QObject):
         self._save_timer = QTimer(self, singleShot=True, interval=1000)
         self._save_timer.timeout.connect(self._save)
         self._apply_volume()
+        self._apply_brightness()
 
         self._timer = QTimer(self)
         self._timer.setInterval(1000)
@@ -155,8 +161,12 @@ class Backend(QObject):
 
     def _set_night(self, night: bool, override: bool | None) -> None:
         if (night, override) != (self._night, self._night_override):
+            changed = night != self._night
             self._night, self._night_override = night, override
             self.nightModeChanged.emit()
+            if changed:
+                self._apply_brightness()
+                self.brightnessChanged.emit()
 
     @Slot()
     def toggleNight(self) -> None:
@@ -231,6 +241,32 @@ class Backend(QObject):
             self.volumeChanged.emit()
 
     volume = Property(int, _get_volume, _set_volume, notify=volumeChanged)
+
+    def _brightness_key(self) -> str:
+        return "night_brightness" if self._night else "day_brightness"
+
+    def _get_brightness(self) -> int:
+        return getattr(self._settings, self._brightness_key())
+
+    def _set_brightness(self, percent: int) -> None:
+        percent = max(MIN_BRIGHTNESS, min(100, int(percent)))
+        if percent != self._get_brightness():
+            setattr(self._settings, self._brightness_key(), percent)
+            self._apply_brightness()
+            self._save_timer.start()
+            self.brightnessChanged.emit()
+
+    brightness = Property(int, _get_brightness, _set_brightness, notify=brightnessChanged)
+
+    def _get_hardware_brightness(self) -> bool:
+        return self._backlight.available
+
+    # False on Windows (or a Pi without a usable backlight): QML dims the picture instead.
+    hardwareBrightness = Property(bool, _get_hardware_brightness, notify=brightnessChanged)
+
+    def _apply_brightness(self) -> None:
+        if self._backlight.available and not self._backlight.set_percent(self._get_brightness()):
+            self.brightnessChanged.emit()  # backlight failed: switch QML to software dimming
 
     def _apply_volume(self) -> None:
         percent = self._settings.volume

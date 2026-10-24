@@ -48,6 +48,16 @@ ApplicationWindow {
 
     AlarmPopup { backend: root.backend }
 
+    // Software brightness, used when there's no hardware backlight to drive (e.g. on
+    // Windows). Sits above popups too; it never takes input.
+    Rectangle {
+        parent: Overlay.overlay
+        anchors.fill: parent
+        z: 1000
+        color: "black"
+        opacity: root.backend.hardwareBrightness ? 0 : (1 - root.backend.brightness / 100) * 0.85
+    }
+
     // Escape quits in dev; on the Pi there is no keyboard so this is harmless.
     Shortcut {
         sequence: "Esc"

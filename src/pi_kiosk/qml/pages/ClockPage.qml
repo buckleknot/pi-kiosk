@@ -4,8 +4,8 @@ import QtQuick.Controls.Material
 import QtQuick.Layouts
 import "../components"
 
-// Home screen: big clock, with Alarm / Relax / Settings along the bottom and
-// day/night override + volume down the right-hand side.
+// Home screen: big clock, with Alarm / Relax / Settings along the bottom,
+// day/night override + brightness down the left-hand side and volume down the right.
 Page {
     id: page
     required property var backend
@@ -13,16 +13,17 @@ Page {
 
     // Dev aid: resident memory (see README, "Keeping it inside 512 MB").
     Label {
-        anchors { top: parent.top; left: parent.left; margins: 12 }
+        anchors { top: parent.top; horizontalCenter: parent.horizontalCenter; topMargin: 8 }
         text: page.backend.memoryMb.toFixed(0) + " MB"
         font.pixelSize: 14
         opacity: 0.4
     }
 
+    // Left: day/night override, then brightness (day and night each keep their own).
     ColumnLayout {
         anchors {
-            right: parent.right; top: parent.top; bottom: buttons.top
-            rightMargin: 16; topMargin: 16; bottomMargin: 12
+            left: parent.left; top: parent.top; bottom: buttons.top
+            leftMargin: 16; topMargin: 16; bottomMargin: 12
         }
         spacing: 2
 
@@ -52,7 +53,51 @@ Page {
             opacity: 0.6
         }
 
-        VolumeSlider {
+        VerticalSlider {
+            id: brightness
+            Layout.alignment: Qt.AlignHCenter
+            Layout.fillHeight: true
+            Layout.topMargin: 8
+            from: 5
+            value: page.backend.brightness
+            onMoved: page.backend.brightness = value
+        }
+        Label {
+            Layout.alignment: Qt.AlignHCenter
+            text: Math.round(brightness.value) + "%"
+            font.pixelSize: 14
+            opacity: 0.6
+        }
+    }
+
+    // Right: volume.
+    ColumnLayout {
+        anchors {
+            right: parent.right; top: parent.top; bottom: buttons.top
+            rightMargin: 16; topMargin: 16; bottomMargin: 12
+        }
+        spacing: 2
+
+        Item {  // same height as the day/night button opposite, so the sliders line up
+            Layout.alignment: Qt.AlignHCenter
+            implicitWidth: 72
+            implicitHeight: 72
+            VolumeIcon {
+                anchors.centerIn: parent
+                width: 30
+                height: 30
+                color: page.Material.foreground
+                opacity: 0.7
+            }
+        }
+        Label {
+            Layout.alignment: Qt.AlignHCenter
+            text: "volume"
+            font.pixelSize: 13
+            opacity: 0.6
+        }
+
+        VerticalSlider {
             id: volume
             Layout.alignment: Qt.AlignHCenter
             Layout.fillHeight: true

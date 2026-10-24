@@ -115,6 +115,33 @@ def test_alarm_never_plays_below_minimum_volume(make):
     assert player.volume == 0.1
 
 
+class FakeBacklight:
+    available = True
+
+    def __init__(self):
+        self.percent = None
+
+    def set_percent(self, percent):
+        self.percent = percent
+        return True
+
+
+def test_brightness_is_remembered_separately_for_day_and_night(tmp_path, qtbot):
+    light = FakeBacklight()
+    clock = Clock("20:00")
+    b = Backend(settings_path=tmp_path / "s.json", player=FakePlayer(), clock=clock,
+                backlight=light)
+    assert b.hardwareBrightness and b.brightness == 100 and light.percent == 100
+    b.brightness = 60
+    b.toggleNight()
+    assert b.brightness == 30 and light.percent == 30  # night default
+    b.brightness = 2
+    assert b.brightness == 5  # never fully dark
+    b.toggleNight()
+    assert b.brightness == 60 and light.percent == 60
+    qtbot.waitUntil(lambda: Settings.load(tmp_path / "s.json").night_brightness == 5, timeout=2000)
+
+
 def test_settings_persist_and_bad_times_are_ignored(make, tmp_path):
     b, _, _ = make()
     b.alarmTime = "06:30"

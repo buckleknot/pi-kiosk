@@ -22,6 +22,10 @@ sudo apt-get install -y --no-install-recommends python3-pytest python3-pytestqt 
 echo "== Groups for GPU (/dev/dri) and touch (/dev/input) =="
 sudo usermod -aG video,render,input "$USER_NAME"
 
+echo "== Backlight: let the video group set the screen brightness =="
+echo 'SUBSYSTEM=="backlight", RUN+="/bin/chgrp video /sys/class/backlight/%k/brightness", RUN+="/bin/chmod g+w /sys/class/backlight/%k/brightness"' \
+    | sudo tee /etc/udev/rules.d/99-pi-kiosk-backlight.rules >/dev/null
+
 echo "== systemd service =="
 sudo install -m 644 "$APP_DIR/deploy/pi/pi-kiosk@.service" /etc/systemd/system/
 sudo sed -i "s|__APP_DIR__|$APP_DIR|g" /etc/systemd/system/pi-kiosk@.service

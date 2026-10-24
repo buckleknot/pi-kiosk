@@ -4,4 +4,5 @@ TimePicker 1.0 TimePicker.qml
 SoundPicker 1.0 SoundPicker.qml
 AlarmPopup 1.0 AlarmPopup.qml
 DayNightIcon 1.0 DayNightIcon.qml
-VolumeSlider 1.0 VolumeSlider.qml
+VerticalSlider 1.0 VerticalSlider.qml
+VolumeIcon 1.0 VolumeIcon.qml

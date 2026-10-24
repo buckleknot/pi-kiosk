@@ -2,7 +2,8 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Controls.Material
 
-// Vertical 0-100 slider with a thick rounded track and a finger-sized handle.
+// Vertical 0-100 slider (volume, brightness) with a thick rounded track and a
+// finger-sized handle.
 // Colours come from the Material accent, so it turns dim red at night.
 Slider {
     id: control
