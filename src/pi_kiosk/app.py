@@ -69,17 +69,18 @@ def main(argv: list[str] | None = None) -> int:
     backend = Backend()
     engine = QQmlApplicationEngine()
     engine.addImportPath(str(QML_DIR))
-    engine.setInitialProperties({
+    props = {
         "backend": backend,
         "kioskFullscreen": args.fullscreen,
         "width": args.width,
         "height": args.height,
-    })
+    }
+    engine.setInitialProperties(props)
     engine.load(MAIN_QML.as_uri())
     if not engine.rootObjects():
         return 1
 
-    reloader = QmlReloader(engine, MAIN_QML, QML_DIR) if args.reload else None  # noqa: F841
+    reloader = QmlReloader(engine, MAIN_QML, QML_DIR, props) if args.reload else None  # noqa: F841
     return app.exec()
 
 

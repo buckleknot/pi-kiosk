@@ -9,8 +9,12 @@ from PySide6.QtQml import QQmlApplicationEngine
 
 
 class QmlReloader(QObject):
-    def __init__(self, engine: QQmlApplicationEngine, main_qml: Path, qml_dir: Path) -> None:
+    def __init__(self, engine: QQmlApplicationEngine, main_qml: Path, qml_dir: Path,
+                 initial_props: dict) -> None:
         super().__init__(engine)
+        # Reuse the originals rather than reading them back from the old window: a QML
+        # edit that drops a property would otherwise pass None on to every later reload.
+        self._props = initial_props
         self._engine = engine
         self._main = main_qml
         self._dir = qml_dir
@@ -31,13 +35,11 @@ class QmlReloader(QObject):
         self._watcher.addPaths(files + dirs)  # editors often replace files, so re-add
 
     def _reload(self) -> None:
-        props = {}
         for obj in self._engine.rootObjects():
-            props = {k: obj.property(k) for k in ("backend", "kioskFullscreen", "width", "height")}
             obj.close()
             obj.deleteLater()
         self._engine.clearComponentCache()
-        self._engine.setInitialProperties(props)
+        self._engine.setInitialProperties(self._props)
         self._engine.load(self._main.as_uri())
         self._watch()
         ok = bool(self._engine.rootObjects())
