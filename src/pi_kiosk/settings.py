@@ -32,6 +32,7 @@ class Settings:
     alarm_enabled: bool = False
     ambient_sound: str = "rain"
     alarm_sound: str = "chime"
+    volume: int = 70  # percent
 
     @classmethod
     def load(cls, path: Path) -> Settings:

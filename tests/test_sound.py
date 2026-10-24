@@ -64,6 +64,14 @@ def test_fades_in_then_plays_at_full_level(player, tmp_path):
     player.stop()
 
 
+def test_volume_scales_the_output(player, tmp_path):
+    player.set_volume(0.5)
+    player.play(make_wav(tmp_path / "a.wav", 1.0), loop=True)
+    wait_for(lambda: FakeSink.opened and len(FakeSink.opened[0].peaks) >= 6)
+    assert FakeSink.opened[0].peaks[5] == LEVEL // 4  # 50% on the slider = quarter amplitude
+    player.stop()
+
+
 def test_stop_fades_out_then_releases_the_device(player, tmp_path):
     player.play(make_wav(tmp_path / "a.wav", 1.0), loop=True)
     wait_for(lambda: FakeSink.opened and len(FakeSink.opened[0].peaks) >= 6)

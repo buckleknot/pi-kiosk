@@ -17,6 +17,7 @@ from .sound import SoundPlayer, create_player
 
 SOUNDS_DIR = Path(__file__).resolve().parent / "sounds"
 SNOOZE = timedelta(minutes=9)
+ALARM_MIN_VOLUME = 50  # percent: a turned-down slider mustn't make you oversleep
 KINDS = ("ambient", "alarm")  # sub-folders of sounds/, also the `kind` QML passes in
 
 
@@ -65,6 +66,7 @@ class Backend(QObject):
     settingsChanged = Signal()
     alarmRingingChanged = Signal()
     playingChanged = Signal()
+    volumeChanged = Signal()
 
     def __init__(
         self,
@@ -93,6 +95,11 @@ class Backend(QObject):
         self._preview = ""            # "<kind>/<id>" while previewing
         self._last_alarm: datetime | None = None  # minute it last rang, so it rings once
         self._snooze_until: datetime | None = None
+
+        # Volume is saved once the slider stops moving, not on every step.
+        self._save_timer = QTimer(self, singleShot=True, interval=1000)
+        self._save_timer.timeout.connect(self._save)
+        self._apply_volume()
 
         self._timer = QTimer(self)
         self._timer.setInterval(1000)
@@ -162,12 +169,15 @@ class Backend(QObject):
         if getattr(self._settings, key) == value:
             return
         setattr(self._settings, key, value)
+        self._save()
+        self.settingsChanged.emit()
+        self._update_night(self._clock())
+
+    def _save(self) -> None:
         try:
             self._settings.save(self._settings_path)
         except OSError as e:
             print(f"[settings] could not save {self._settings_path}: {e}")
-        self.settingsChanged.emit()
-        self._update_night(self._clock())
 
     def _time_setting(key: str, notify: Signal) -> Property:  # noqa: N805 (class-body helper)
         def setter(self, value: str) -> None:
@@ -209,6 +219,25 @@ class Backend(QObject):
 
     alarmSound = Property(str, _get_alarm_sound, _set_alarm_sound, notify=settingsChanged)
 
+    def _get_volume(self) -> int:
+        return self._settings.volume
+
+    def _set_volume(self, percent: int) -> None:
+        percent = max(0, min(100, int(percent)))
+        if percent != self._settings.volume:
+            self._settings.volume = percent
+            self._apply_volume()
+            self._save_timer.start()
+            self.volumeChanged.emit()
+
+    volume = Property(int, _get_volume, _set_volume, notify=volumeChanged)
+
+    def _apply_volume(self) -> None:
+        percent = self._settings.volume
+        if self._playing == "alarm":
+            percent = max(percent, ALARM_MIN_VOLUME)
+        self._player.set_volume(percent / 100)
+
     def _get_ambient_sounds(self) -> list:
         return list_sounds(self._sounds_dir / "ambient")
 
@@ -243,6 +272,7 @@ class Backend(QObject):
             self._preview = ""
         if what != self._playing or what == "preview":
             self._playing = what
+            self._apply_volume()
             self.playingChanged.emit()
 
     def _get_relaxing(self) -> bool:

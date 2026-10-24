@@ -5,7 +5,7 @@ import QtQuick.Layouts
 import "../components"
 
 // Home screen: big clock, with Alarm / Relax / Settings along the bottom and
-// a day/night override on the right-hand side.
+// day/night override + volume down the right-hand side.
 Page {
     id: page
     required property var backend
@@ -51,7 +51,21 @@ Page {
             font.pixelSize: 13
             opacity: 0.6
         }
-        Item { Layout.fillHeight: true }
+
+        VolumeSlider {
+            id: volume
+            Layout.alignment: Qt.AlignHCenter
+            Layout.fillHeight: true
+            Layout.topMargin: 8
+            value: page.backend.volume
+            onMoved: page.backend.volume = value
+        }
+        Label {
+            Layout.alignment: Qt.AlignHCenter
+            text: Math.round(volume.value) + "%"
+            font.pixelSize: 14
+            opacity: 0.6
+        }
     }
 
     ColumnLayout {

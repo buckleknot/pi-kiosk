@@ -11,12 +11,16 @@ class FakePlayer(SoundPlayer):
     def __init__(self):
         super().__init__()
         self.playing = None  # (file name, loop) or None
+        self.volume = None
 
     def play(self, path, loop=False):
         self.playing = (path.name, loop)
 
     def stop(self):
         self.playing = None
+
+    def set_volume(self, level):
+        self.volume = level
 
 
 class Clock:
@@ -89,6 +93,26 @@ def test_night_toggle_overrides_until_the_next_scheduled_switch(make):
     assert not b.nightMode and b.nightOverridden
     b.toggleNight()
     assert b.nightMode and not b.nightOverridden  # toggling back = auto again
+
+
+def test_volume_is_applied_saved_and_clamped(make, tmp_path, qtbot):
+    b, _, player = make()
+    assert player.volume == 0.7
+    b.volume = 30
+    assert player.volume == 0.3
+    b.volume = 250
+    assert b.volume == 100
+    qtbot.waitUntil(lambda: Settings.load(tmp_path / "settings.json").volume == 100, timeout=2000)
+
+
+def test_alarm_never_plays_below_minimum_volume(make):
+    b, clock, player = make("06:59", alarm_enabled=True, alarm_time="07:00", volume=10)
+    assert player.volume == 0.1
+    clock.advance(minutes=1)
+    b._tick()
+    assert player.volume == 0.5
+    b.stopAlarm()
+    assert player.volume == 0.1
 
 
 def test_settings_persist_and_bad_times_are_ignored(make, tmp_path):

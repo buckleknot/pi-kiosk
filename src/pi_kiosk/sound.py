@@ -31,6 +31,9 @@ class SoundPlayer(QObject):
     def stop(self) -> None:
         pass
 
+    def set_volume(self, level: float) -> None:
+        """0.0 (silent) to 1.0 (as recorded)."""
+
 
 class AplaySink:
     """Raw PCM into `aplay` on stdin, with small buffers so fades react quickly."""
@@ -91,6 +94,7 @@ class FadingPlayer(SoundPlayer):
         self._sink, self._fmt = None, None
         self._reader: wave.Wave_read | None = None
         self._loop, self._gain = False, 0.0
+        self._volume = self._level = 1.0  # requested / last applied output level
         threading.Thread(target=self._run, name="sound", daemon=True).start()
 
     def play(self, path: Path, loop: bool = False) -> None:
@@ -98,6 +102,9 @@ class FadingPlayer(SoundPlayer):
 
     def stop(self) -> None:
         self._post(None)
+
+    def set_volume(self, level: float) -> None:
+        self._volume = max(0.0, min(1.0, level)) ** 2  # squared: even steps to the ear
 
     def _post(self, request: tuple[Path, bool] | None) -> None:
         with self._cond:
@@ -126,6 +133,7 @@ class FadingPlayer(SoundPlayer):
             self._close_reader()
             if request:
                 self._reader, self._loop, self._gain = _open_wav(request[0]), request[1], 0.0
+                self._level = self._volume
                 fmt = (self._reader.getframerate(), self._reader.getnchannels())
                 if self._fmt != fmt:
                     self._close_sink()
@@ -145,8 +153,10 @@ class FadingPlayer(SoundPlayer):
 
         step = CHUNK_SECONDS / self._fade
         target = max(0.0, self._gain - step) if pending else min(1.0, self._gain + step)
-        self._sink.write(_ramp(frames, self._gain, target))
-        self._gain = target
+        level = self._volume
+        # Fade and volume both glide across the chunk, so neither causes a click.
+        self._sink.write(_scale(frames, self._gain ** 2 * self._level, target ** 2 * level))
+        self._gain, self._level = target, level
 
     def _close_reader(self) -> None:
         if self._reader:
@@ -167,16 +177,17 @@ def _open_wav(path: Path) -> wave.Wave_read:
     return reader
 
 
-def _ramp(frames: bytes, start: float, end: float) -> bytes:
-    """Scale 16-bit samples by a gain sliding from `start` to `end` (squared, so it
-    sounds even to the ear). WAV and both sinks are little-endian, as is the Pi."""
+def _scale(frames: bytes, start: float, end: float) -> bytes:
+    """Scale 16-bit samples by a gain sliding from `start` to `end`.
+    WAV and both sinks are little-endian, as is the Pi."""
     if start == end == 1.0:
         return frames
     samples = array("h", frames)
+    if start == end:
+        return array("h", [int(s * start) for s in samples]).tobytes()
     n = len(samples) or 1
     for i, s in enumerate(samples):
-        g = start + (end - start) * i / n
-        samples[i] = int(s * g * g)
+        samples[i] = int(s * (start + (end - start) * i / n))
     return samples.tobytes()
 
 

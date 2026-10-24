@@ -42,7 +42,7 @@ def test_main_qml_loads_without_warnings(qtbot, tmp_path):
     assert warnings == []
     root = engine.rootObjects()[0]
     assert (root.width(), root.height()) == (800, 480)
-    assert {"12:34", "Relax", "Alarm off", "Settings", "auto"} <= texts(root)
+    assert {"12:34", "Relax", "Alarm off", "Settings", "auto", "70%"} <= texts(root)
 
 
 def test_night_mode_and_ringing_alarm_load_without_warnings(qtbot, tmp_path):
